@@ -66,24 +66,33 @@ class OT2Env(gym.Env):
 
         # Calculate distance to goal
         distance_to_goal = np.linalg.norm(pipette_position - self.goal_position)
+        distance_reward = self.previous_distance - distance_to_goal if hasattr(self, 'previous_distance') else 0
+        self.previous_distance = distance_to_goal
 
-        # Reward is negative distance
-        # Reward function
+
+
+            # Reward function
         reward = 0
 
-        # 1. Reward for reducing distance to the goal
-        reward -= distance_to_goal  # Negative reward for being far away
+        # 1. Positive reward for reducing the distance to the goal
+        reward += 2 * distance_reward  # Multiply for more noticeable impact
 
         # 2. Bonus for being very close to the goal
         if distance_to_goal < 0.05:
-            reward += 10  # Large positive reward for reaching the goal
+            reward += 20  # Large positive reward for reaching the goal
+            terminated = True
+        else:
+            terminated = False
 
-        # 3. Penalize large or unnecessary actions
+        # 3. Small constant reward for making progress each step
+        reward += 1.0  # Encourages movement toward the goal
+
+        # 4. Penalize large or unnecessary actions
         action_magnitude = np.linalg.norm(action)
-        reward -= 0.1 * action_magnitude  # Penalize large movements
+        reward -= 0.05 * action_magnitude  # Penalize large movements, reduced weight
 
-        # 4. Add time penalty to encourage faster completion
-        reward -= 0.01  # Small penalty per step to discourage delays
+        # 5. Add a small time penalty to encourage faster completion
+        reward -= 0.01  # Small penalty per step
         # Check termination condition
         terminated = bool(distance_to_goal < 0.05)  # Explicitly cast to boolean
 

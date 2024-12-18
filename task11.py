@@ -37,8 +37,8 @@ run = wandb.init(project="sb3_pendulum_demo",sync_tensorboard=True)
 parser = argparse.ArgumentParser()
 parser.add_argument("--learning_rate", type=float, default=0.0001)
 parser.add_argument("--batch_size", type=int, default=32)
-parser.add_argument("--n_steps", type=int, default=1024)
-parser.add_argument("--n_epochs", type=int, default=1000)
+parser.add_argument("--n_steps", type=int, default=700000)
+parser.add_argument("--n_epochs", type=int, default=10)
 parser.add_argument("--gamma", type=float, default=0.98)
 parser.add_argument("--gae_lambda", type=float, default=0.9)
 parser.add_argument("--clip_range", type=float, default=0.2)
@@ -70,4 +70,4 @@ wandb_callback = WandbCallback(model_save_freq=1000,
                                 )
 
 # add wandb callback to the model training
-model.learn(total_timesteps=250000, callback=wandb_callback, progress_bar=True, tb_log_name=f"runs/{run.id}")
+model.learn(total_timesteps=5000000, callback=wandb_callback, progress_bar=True, tb_log_name=f"runs/{run.id}")
