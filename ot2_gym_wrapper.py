@@ -68,7 +68,7 @@ class OT2Env(gym.Env):
         distance_to_goal = np.linalg.norm(pipette_position - self.goal_position)
 
         # Reward is negative distance
-        reward = -distance_to_goal
+        reward = -np.linalg.norm(pipette_position - self.goal_position)
 
         # Check termination condition
         terminated = bool(distance_to_goal < 0.05)  # Explicitly cast to boolean
