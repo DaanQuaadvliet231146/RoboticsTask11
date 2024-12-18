@@ -36,19 +36,32 @@ run = wandb.init(project="sb3_pendulum_demo",sync_tensorboard=True)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--learning_rate", type=float, default=0.0001)
-parser.add_argument("--batch_size", type=int, default=64)
-parser.add_argument("--n_steps", type=int, default=2048)
-parser.add_argument("--n_epochs", type=int, default=10)
+parser.add_argument("--batch_size", type=int, default=32)
+parser.add_argument("--n_steps", type=int, default=1024)
+parser.add_argument("--n_epochs", type=int, default=500)
+parser.add_argument("--gamma", type=float, default=0.98)
+parser.add_argument("--gae_lambda", type=float, default=0.9)
+parser.add_argument("--clip_range", type=float, default=0.2)
+parser.add_argument("--value_coefficient", type=float, default=0.5)
+parser.add_argument("--target_kl", type=float, default=0.02)
 
 args, unknown = parser.parse_known_args()
 
-# add tensorboard logging to the model
-model = PPO('MlpPolicy', wrapped_env, verbose=1, 
-            learning_rate=args.learning_rate, 
-            batch_size=args.batch_size, 
-            n_steps=args.n_steps, 
-            n_epochs=args.n_epochs, 
-            tensorboard_log=f"runs/{run.id}",)
+# Define the PPO model
+model = PPO(
+    "MlpPolicy", wrapped_env, verbose=1,
+    learning_rate=args.learning_rate,
+    batch_size=args.batch_size,
+    n_steps=args.n_steps,
+    n_epochs=args.n_epochs,
+    gamma=args.gamma,
+    gae_lambda=args.gae_lambda,
+    clip_range=args.clip_range,
+    vf_coef=args.value_coefficient,
+    target_kl=args.target_kl,
+    tensorboard_log=f"runs/{run.id}",
+)
+
 
 # create wandb callback
 wandb_callback = WandbCallback(model_save_freq=1000,
