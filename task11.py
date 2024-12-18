@@ -32,7 +32,7 @@ os.environ["WANDB_SYMLINK"] = "false"
 env = gym.make('Pendulum-v1',g=9.81)
 
 # initialize wandb project
-run = wandb.init(project="sb3_pendulum_demo",sync_tensorboard=True)
+run = wandb.init(project="Task11_ReinforcementLearning",sync_tensorboard=True)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--learning_rate", type=float, default=0.0001)
@@ -68,4 +68,4 @@ wandb_callback = WandbCallback(model_save_freq=1000,
                                 )
 
 # add wandb callback to the model training
-model.learn(total_timesteps=5000000, callback=wandb_callback, progress_bar=True, tb_log_name=f"runs/{run.id}")
+model.learn(total_timesteps=1000001, callback=wandb_callback, progress_bar=True, tb_log_name=f"runs/{run.id}")
