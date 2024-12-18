@@ -68,4 +68,4 @@ wandb_callback = WandbCallback(model_save_freq=1000,
                                 )
 
 # add wandb callback to the model training
-model.learn(total_timesteps=1000001, callback=wandb_callback, progress_bar=True, tb_log_name=f"runs/{run.id}")
+model.learn(total_timesteps=1000000, callback=wandb_callback, progress_bar=True, tb_log_name=f"runs/{run.id}")
