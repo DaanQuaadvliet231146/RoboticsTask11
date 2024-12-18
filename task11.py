@@ -38,7 +38,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--learning_rate", type=float, default=0.0001)
 parser.add_argument("--batch_size", type=int, default=32)
 parser.add_argument("--n_steps", type=int, default=1024)
-parser.add_argument("--n_epochs", type=int, default=1000)
+parser.add_argument("--n_epochs", type=int, default=100)
 
 args, unknown = parser.parse_known_args()
 
