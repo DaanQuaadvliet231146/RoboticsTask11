@@ -62,10 +62,10 @@ model = PPO(
 
 
 # create wandb callback
-wandb_callback = WandbCallback(model_save_freq=1000,
+wandb_callback = WandbCallback(model_save_freq=100000,
                                 model_save_path=f"models/{run.id}",
                                 verbose=2,
                                 )
 
 # add wandb callback to the model training
-model.learn(total_timesteps=1000000, callback=wandb_callback, progress_bar=True, tb_log_name=f"runs/{run.id}")
+model.learn(total_timesteps=6000000, callback=wandb_callback, progress_bar=True, tb_log_name=f"runs/{run.id}")
