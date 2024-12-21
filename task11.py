@@ -15,7 +15,7 @@ from ot2_gym_wrapper import OT2Env
 
 # Use the appropriate project name and task name (if you are in the first group in Dean's mentor group, use the project name 'Mentor Group D/Group 1')
 # It can also be helpful to include the hyperparameters in the task name
-task = Task.init(project_name='Mentor Group K/Group 1', task_name='Experiment1_DaanQuaadvliet')
+task = Task.init(project_name='Mentor Group K/Group 1/DaanQuaadvliet', task_name='DaanQuaadvliet_baseline')
 #copy these lines exactly as they are
 #setting the base docker image
 wrapped_env = OT2Env()
@@ -33,6 +33,9 @@ env = gym.make('Pendulum-v1',g=9.81)
 
 # initialize wandb project
 run = wandb.init(project="Task11_ReinforcementLearning",sync_tensorboard=True)
+save_path = f"models/{run.id}"
+os.makedirs(save_path, exist_ok=True)
+timesteps = 5000000
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--learning_rate", type=float, default=0.0001)
@@ -68,4 +71,7 @@ wandb_callback = WandbCallback(model_save_freq=100000,
                                 )
 
 # add wandb callback to the model training
-model.learn(total_timesteps=6000000, callback=wandb_callback, progress_bar=True, tb_log_name=f"runs/{run.id}")
+model.learn(total_timesteps=timesteps, callback=wandb_callback, progress_bar=True, tb_log_name=f"runs/{run.id}")
+# Save the model.
+model.save(f"models/{run.id}/{timesteps}_baseline")
+wandb.save(f"models/{run.id}/{timesteps}_baseline")
