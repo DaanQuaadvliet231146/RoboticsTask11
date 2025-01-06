@@ -60,24 +60,45 @@ class OT2Env(gym.Env):
         robot_data = sim_obs[robot_key]
         pipette_position = np.array(robot_data['pipette_position'], dtype=np.float32)
 
-        observation = np.array(pipette_position, dtype=np.float32)
-        # Calculate the agent's reward
-        distance = np.linalg.norm(np.array(pipette_position) - np.array(self.goal_position))
-        reward = -distance
+        # Create observation
+        observation = np.concatenate((pipette_position, self.goal_position)).astype(np.float32)
+
+        # Calculate distance to goal
+        distance_to_goal = np.linalg.norm(pipette_position - self.goal_position)
         
-        # Check if the agent reaches within the threshold of the goal position
-        if np.linalg.norm(pipette_position - self.goal_position) <= 0.001:
+        
+        
+        distance_reward = self.previous_distance - distance_to_goal if hasattr(self, 'previous_distance') else 0
+        self.previous_distance = distance_to_goal
+
+
+
+            # Reward function
+        reward = 0
+
+        # 1. Positive reward for reducing the distance to the goal
+        reward += 2 * distance_reward  # Multiply for more noticeable impact
+
+        # 2. Bonus for being very close to the goal
+        if distance_to_goal < 0.01:
+            reward += 20  # Large positive reward for reaching the goal
             terminated = True
         else:
             terminated = False
 
-        # Check if episode should be truncated
-        if self.steps >= self.max_steps:
-            truncated = True
-        else:
-            truncated = False
-        observation = np.concatenate((pipette_position, self.goal_position), axis=0).astype(np.float32)
-        info = {}
+        # 3. Small constant reward for making progress each step
+        reward += 1.0  # Encourages movement toward the goal
+
+        # 4. Penalize large or unnecessary actions
+        action_magnitude = np.linalg.norm(action)
+        reward -= 0.01 * action_magnitude  # Penalize large movements, reduced weight
+
+        # 5. Add a small time penalty to encourage faster completion
+        reward -= 0.01  # Small penalty per step
+        # Check termination conditiond
+        terminated = bool(distance_to_goal < 0.001)  # Explicitly cast to boolean
+
+        truncated = self.steps >= self.max_steps
 
         # Increment step count
         self.steps += 1
