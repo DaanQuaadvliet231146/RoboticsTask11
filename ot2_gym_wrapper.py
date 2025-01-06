@@ -12,11 +12,15 @@ class OT2Env(gym.Env):
         # Create the simulation environment
         self.sim = Simulation(num_agents=1, render=self.render)
 
-        # Define action space (x, y, z movements with bounded velocities)
-        self.action_space = spaces.Box(low=np.array([-1, -1, -1]), high=np.array([1, 1, 1]), dtype=np.float32)
-
-        # Define observation space (pipette position + goal position)
-        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(6,), dtype=np.float32)
+        self.x_min, self.x_max = -0.1872, 0.2531
+        self.y_min, self.y_max = -0.1711, 0.2201
+        self.z_min, self.z_max = 0.1691, 0.2896
+        self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(3,), dtype=np.float32)
+        self.observation_space = spaces.Box(
+            low=np.array([self.x_min, self.y_min, self.z_min, -self.x_max, -self.y_max, -self.z_max], dtype=np.float32),
+            high=np.array([self.x_max, self.y_max, self.z_max, self.x_max, self.y_max, self.z_max], dtype=np.float32),
+            dtype=np.float32
+        )
 
         # Initialize step count
         self.steps = 0
