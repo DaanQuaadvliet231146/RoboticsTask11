@@ -112,7 +112,7 @@ class Simulation:
                 if agent_count < num_agents:  # Check if more agents need to be placed
                     # Calculate position for each robot
                     position = [-spacing * i, -spacing * j, 0.03]
-                    robotId = p.loadURDF("C:/Users/daanq/Documents/Buas Year 2/Git/2024-25b-fai2-adsai-DaanQuaadvliet231146/Robotics/ot_2_simulation_v6.urdf", position, [0,0,0,1],
+                    robotId = p.loadURDF(ot_2_simulation_v6.urdf", position, [0,0,0,1],
                                         flags=p.URDF_USE_INERTIA_FROM_FILE)
                     start_position, start_orientation = p.getBasePositionAndOrientation(robotId)
                     p.createConstraint(parentBodyUniqueId=robotId,
@@ -132,7 +132,7 @@ class Simulation:
                     offset = [0.18275-0.00005, 0.163-0.026, 0.057]
                     position_with_offset = [position[0] + offset[0], position[1] + offset[1], position[2] + offset[2]]
                     rotate_90 = p.getQuaternionFromEuler([0, 0, -math.pi/2])
-                    planeId = p.loadURDF("C:\\Users\\daanq\\Documents\\Buas Year 2\\Git\\2024-25b-fai2-adsai-DaanQuaadvliet231146\\Robotics\\custom.urdf", position_with_offset, rotate_90)#start_orientation)
+                    planeId = p.loadURDF(custom.urdf", position_with_offset, rotate_90)#start_orientation)
                     # Disable collision between the robot and the specimen
                     p.setCollisionFilterPair(robotId, planeId, -1, -1, enableCollision=0)
                     spec_position, spec_orientation = p.getBasePositionAndOrientation(planeId)
