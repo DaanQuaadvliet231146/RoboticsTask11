@@ -12,15 +12,11 @@ class OT2Env(gym.Env):
         # Create the simulation environment
         self.sim = Simulation(num_agents=1, render=self.render)
 
-        self.x_min, self.x_max = -0.1872, 0.2531
-        self.y_min, self.y_max = -0.1711, 0.2201
-        self.z_min, self.z_max = 0.1691, 0.2896
-        self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(3,), dtype=np.float32)
-        self.observation_space = spaces.Box(
-            low=np.array([self.x_min, self.y_min, self.z_min, -self.x_max, -self.y_max, -self.z_max], dtype=np.float32),
-            high=np.array([self.x_max, self.y_max, self.z_max, self.x_max, self.y_max, self.z_max], dtype=np.float32),
-            dtype=np.float32
-        )
+        # Define action space (x, y, z movements with bounded velocities)
+        self.action_space = spaces.Box(low=np.array([-1, -1, -1]), high=np.array([1, 1, 1]), dtype=np.float32)
+
+        # Define observation space (pipette position + goal position)
+        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(6,), dtype=np.float32)
 
         # Initialize step count
         self.steps = 0
@@ -37,12 +33,17 @@ class OT2Env(gym.Env):
             np.random.uniform(0.2531, -0.1872),
             np.random.uniform(0.2201, -0.1711),
             np.random.uniform(0.2896, 0.1691)         
-            ])  # Example bounds
+            ])
 
-        # Extract pipette position and create the observation array
-        robot_key = next(iter(initial_obs))  # Dynamically get the first key
-        pipette_position = np.array(initial_obs[robot_key]['pipette_position'], dtype=np.float32)
-        observation = np.concatenate((pipette_position, self.goal_position)).astype(np.float32)
+        # Call reset function
+        observation = self.sim.reset(num_agents=1)
+        # Set the observation.
+        observation = np.concatenate(
+            (
+                self.sim.get_pipette_position(self.sim.robotIds[0]), 
+                self.goal_position
+            ), axis=0
+        ).astype(np.float32) 
 
         # Reset step counter
         self.steps = 0
@@ -53,17 +54,12 @@ class OT2Env(gym.Env):
 
 
     def step(self, action):
-        # Append a zero drop action (assuming the simulator expects 4 values)
-        extended_action = np.append(action, [0])
-
-        # Execute action in simulation
-        sim_obs = self.sim.run([extended_action])
-
-        # Access the robot data directly
-        robot_key = next(iter(sim_obs))  # Dynamically get the first key (e.g., 'robotId_1')
-        robot_data = sim_obs[robot_key]
-        pipette_position = np.array(robot_data['pipette_position'], dtype=np.float32)
-
+        # set the actions
+        action = np.append(np.array(action, dtype=np.float32), 0)
+        # Call the step function
+        observation = self.sim.run([action])
+        pipette_position = self.sim.get_pipette_position(self.sim.robotIds[0])
+        # Process observation
         observation = np.array(pipette_position, dtype=np.float32)
         # Calculate the agent's reward
         distance = np.linalg.norm(np.array(pipette_position) - np.array(self.goal_position))
@@ -83,17 +79,13 @@ class OT2Env(gym.Env):
         observation = np.concatenate((pipette_position, self.goal_position), axis=0).astype(np.float32)
         info = {}
 
-        # Increment step count
+        # Update the amount of steps
         self.steps += 1
 
-        return observation, reward, terminated, truncated, {}
-
-
-
+        return observation, reward, terminated, truncated, info
 
     def render(self, mode='human'):
-        if self.render:
-            self.sim.render()
+        pass
 
     def close(self):
         self.sim.close()

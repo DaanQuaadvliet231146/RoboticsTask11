@@ -4,7 +4,7 @@ import numpy as np
 from sim_class import Simulation  # Assuming sim_class provides the Simulation environment
 
 class OT2Env(gym.Env):
-    def __init__(self, render=False, max_steps=100000):
+    def __init__(self, render=False, max_steps=1000):
         super(OT2Env, self).__init__()
         self.render = render
         self.max_steps = max_steps

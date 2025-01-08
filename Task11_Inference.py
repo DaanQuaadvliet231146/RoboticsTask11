@@ -1,11 +1,12 @@
 import os
 import numpy as np
 from stable_baselines3 import PPO
-from ot2_gym_wrapper_Task12 import OT2Env
+from ot2_gym_wrapper_V2 import OT2Env
 
 if __name__ == "__main__":
+    print(os.getcwd())
     # Path to the pretrained PPO model
-    model_path = "C:\\Users\\daanq\\Documents\\BUAS_Year_2B\\Block_B_Notes\\Tasks\\Task_11\\model_16384.zip"
+    model_path = "C:\\Users\\daanq\\Documents\\BUAS_Year_2B\\Block_B_Notes\\Tasks\\Task_11\\model_baseline.zip"
 
     # Load the OT2 environment
     env = OT2Env(render=True)
@@ -13,8 +14,12 @@ if __name__ == "__main__":
     # Load the pretrained PPO model
     model = PPO.load(model_path)
 
+
+    max_timesteps = 1000
+
+
     # Run simulation
-    num_episodes = 5
+    num_episodes = 1
     results = []
 
     for episode in range(num_episodes):
@@ -32,6 +37,13 @@ if __name__ == "__main__":
             observation, _, terminated, truncated, _ = env.step(action)
             steps += 1
             print(f"Action at step {steps}: {action}")
+
+
+            # Check max timesteps
+            if steps >= max_timesteps:
+                print(f"Max timesteps ({max_timesteps}) reached. Failing episode.")
+                terminated = True  # End the episode with failure
+                break
 
 
         final_position = observation[:3]

@@ -24,36 +24,11 @@ class Simulation:
         p.setGravity(0,0,-10)
         #p.setPhysicsEngineParameter(contactBreakingThreshold=0.000001)
         # load a texture
-        # Dynamically find the absolute path to the "textures" folder
-        base_dir = os.path.dirname(__file__)  # Get the directory of the current script
-        textures_dir = os.path.join(base_dir, "textures")  # Absolute path to "textures"
-
-        # Verify the textures directory exists
-        if not os.path.exists(textures_dir):
-            raise FileNotFoundError(f"Textures directory not found: {textures_dir}")
-
-                # Filter valid texture files
-        valid_extensions = ['.png', '.jpg', '.jpeg']
-        texture_list = [f for f in os.listdir(textures_dir) if os.path.isfile(os.path.join(textures_dir, f)) and os.path.splitext(f)[1].lower() in valid_extensions]
-
-        if not texture_list:
-            raise FileNotFoundError(f"No valid texture files found in {textures_dir}. Supported formats: {valid_extensions}")
-
-        # Select a random valid texture
-        random_texture = random.choice(texture_list)
-        random_texture_path = os.path.join(textures_dir, random_texture)
-
-        # Debugging: Print the selected texture path
-        print(f"Loading texture: {random_texture_path}")
-
-        # Attempt to load the texture
-        self.plate_texture_id = p.loadTexture(random_texture_path)
-
-
-        # Update paths and load the texture
-        self.plate_image_path = random_texture_path
-        self.plate_texture_id = p.loadTexture(random_texture_path)
-
+        texture_list = os.listdir("textures")
+        random_texture = random.choice(texture_list[:-1])
+        random_texture_index = texture_list.index(random_texture)
+        self.plate_image_path = f'textures/_plates/{os.listdir("textures/_plates")[random_texture_index]}'
+        self.textureId = p.loadTexture(f'textures/{random_texture}')
         #print(f'textureId: {self.textureId}')
 
         # Set the camera parameters
@@ -160,8 +135,7 @@ class Simulation:
                                     childFrameOrientation=spec_orientation)
                     # Load your texture and apply it to the plane
                     #textureId = p.loadTexture("uvmapped_dish_large_comp.png")
-                    p.changeVisualShape(planeId, -1, textureUniqueId=self.plate_texture_id)
-
+                    p.changeVisualShape(planeId, -1, textureUniqueId=self.textureId)
 
                     self.robotIds.append(robotId)
                     self.specimenIds.append(planeId)
