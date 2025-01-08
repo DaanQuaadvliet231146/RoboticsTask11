@@ -22,7 +22,7 @@ wrapped_env = OT2Env()
 #setting the base docker image
 task.set_base_docker('deanis/2023y2b-rl:latest')
 #setting the task to run remotely on the default queue
-task.execute_remotely(queue_name="default")
+task.execute_remotely(queue_name="server2")
 
 os.environ['WANDB_API_KEY'] = 'a17490878d1f01a688053dab318a1001adac6f82'
 os.environ["WANDB_SYMLINK"] = "false"
