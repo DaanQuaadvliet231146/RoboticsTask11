@@ -20,6 +20,10 @@ class OT2Env(gym.Env):
 
         # Initialize step count
         self.steps = 0
+        
+    def get_plate_image(self):
+    # Return the plate image path from the simulation
+        return self.sim.plate_image_path
 
     def reset(self, seed=None):
         if seed is not None:
