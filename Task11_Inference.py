@@ -6,7 +6,7 @@ from ot2_gym_wrapper_V2 import OT2Env
 if __name__ == "__main__":
     print(os.getcwd())
     # Path to the pretrained PPO model
-    model_path = "C:\\Users\\daanq\\Documents\\BUAS_Year_2B\\Block_B_Notes\\Tasks\\Task_11\\best_model.zip"
+    model_path = "C:\\Users\\daanq\\Documents\\BUAS_Year_2B\\Block_B_Notes\\Tasks\\Task_11\\model_baseline_3.zip"
 
     # Load the OT2 environment
     env = OT2Env(render=True)
