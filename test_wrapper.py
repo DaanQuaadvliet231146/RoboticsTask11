@@ -1,6 +1,6 @@
 import gymnasium as gym
 import numpy as np
-from ot2_gym_wrapper_V2 import OT2Env
+from ot2_gym_wrapper import OT2Env
 from sim_class import Simulation
 from PIL import Image  # For GIF creation
 
