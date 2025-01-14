@@ -9,7 +9,7 @@ import os
 from clearml import Task
 from typing_extensions import TypeIs
 import tensorflow
-from ot2_gym_wrapper_V2 import OT2Env
+from ot2_gym_wrapper_V2_Reward2 import OT2Env
 
 # Use the appropriate project name and task name (if you are in the first group in Dean's mentor group, use the project name 'Mentor Group D/Group 1')
 # It can also be helpful to include the hyperparameters in the task name
