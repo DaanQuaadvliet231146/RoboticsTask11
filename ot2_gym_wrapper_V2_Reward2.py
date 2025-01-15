@@ -69,10 +69,6 @@ class OT2Env(gym.Env):
         # Calculate the agent's reward (Exponential Decay)
         distance = np.linalg.norm(np.array(pipette_position) - np.array(self.goal_position))
         reward = -np.exp(distance * 10)  # Adjust the factor (10) for steepness of penalty
-
-        # Bonus reward for reaching the goal
-        if distance <= 0.001:
-            reward += 1000  # Scale down if needed
         
         # Check if the agent reaches within the threshold of the goal position
         terminated = np.linalg.norm(pipette_position - self.goal_position) <= 0.001
