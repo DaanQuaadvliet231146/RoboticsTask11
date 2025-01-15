@@ -33,7 +33,7 @@ env = gym.make('Pendulum-v1',g=9.81)
 run = wandb.init(project="Task11_ReinforcementLearning",sync_tensorboard=True)
 save_path = f"models/{run.id}"
 os.makedirs(save_path, exist_ok=True)
-timesteps = 200000
+timesteps = 5000000
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--learning_rate", type=float, default=0.0001)

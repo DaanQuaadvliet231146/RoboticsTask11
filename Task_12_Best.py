@@ -8,12 +8,12 @@ class PIDRandomPositionSimulation:
     def __init__(self):
         # Initialize the OT2 Gym Environment
         self.env = OT2Env(render=True)
-        self.dt = 0.1  # Reduced time step for finer control
+        self.dt = 1  # Reduced time step for finer control
 
         # Initialize PID controllers for each axis with updated gains
-        self.pid_x = PID(40.0, 0.1, 1.2, sample_time=self.dt)
-        self.pid_y = PID(40.0, 0.1, 1.2, sample_time=self.dt)
-        self.pid_z = PID(40.0, 0.1, 1.2, sample_time=self.dt)
+        self.pid_x = PID(4.0, 0.1, 1.2, sample_time=self.dt)
+        self.pid_y = PID(4.0, 0.1, 1.2, sample_time=self.dt)
+        self.pid_z = PID(4.0, 0.1, 1.2, sample_time=self.dt)
 
         # Set PID output limits (velocity bounds)
         for pid in [self.pid_x, self.pid_y, self.pid_z]:
