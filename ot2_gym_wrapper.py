@@ -3,23 +3,11 @@ from gymnasium import spaces
 import numpy as np
 from sim_class import Simulation  # Assuming sim_class provides the Simulation environment
 
-import numpy as np
-
-# X, Y bounding box
-X_LOW, X_HIGH = -0.1872, 0.2531
-Y_LOW, Y_HIGH = -0.1711, 0.2201
-
-# Fixed Z (if you want to keep it constant)
-Z_FIXED = 0.057
-
-
 class OT2Env(gym.Env):
     def __init__(self, render=False, max_steps=1000):
         super(OT2Env, self).__init__()
         self.render = render
         self.max_steps = max_steps
-        self.goal_position = np.zeros(3, dtype=np.float32)
-
 
         # Create the simulation environment
         self.sim = Simulation(num_agents=1, render=self.render)
@@ -37,28 +25,35 @@ class OT2Env(gym.Env):
     # Return the plate image path from the simulation
         return self.sim.plate_image_path
 
-    def reset(self, seed=None, options=None):
-        super().reset(seed=seed)
-        
-        # Reset simulation
-        self.sim.reset(num_agents=1)
-        
-        # Randomly pick X and Y from bounding box, keep Z fixed
-        rand_x = np.random.uniform(X_LOW, X_HIGH)
-        rand_y = np.random.uniform(Y_LOW, Y_HIGH)
-        rand_z = Z_FIXED  # or any constant you like
-        
-        self.goal_position = np.array([rand_x, rand_y, rand_z], dtype=np.float32)
-        
-        pipette_position = np.array(
-            self.sim.get_pipette_position(self.sim.robotIds[0]),
-            dtype=np.float32
-        )
-        observation = np.concatenate((pipette_position, self.goal_position), axis=0)
-        
+    def reset(self, seed=None):
+        if seed is not None:
+            np.random.seed(seed)
+
+        # Reset simulation environment
+        initial_obs = self.sim.reset(num_agents=1)
+
+        # Randomly set a new goal position
+        self.goal_position = np.array([
+            np.random.uniform(0.2531, -0.1872),
+            np.random.uniform(0.2201, -0.1711),
+            np.random.uniform(0.2896, 0.1691)         
+            ])
+
+        # Call reset function
+        observation = self.sim.reset(num_agents=1)
+        # Set the observation.
+        observation = np.concatenate(
+            (
+                self.sim.get_pipette_position(self.sim.robotIds[0]), 
+                self.goal_position
+            ), axis=0
+        ).astype(np.float32) 
+
+        # Reset step counter
         self.steps = 0
-        info = {}
-        return observation, info
+
+        # Return observation and info
+        return observation, {}
 
 
 

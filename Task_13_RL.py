@@ -104,7 +104,7 @@ def detect_root_tips(skeletonized_mask):
 root_tips = detect_root_tips(skeletonized_mask)
 
 # Convert pixel coordinates to robot coordinates
-plate_size_m = 0.15  # Plate size in mm
+plate_size_m = 0.15  # Plate size in m
 plate_position_robot = [0.10775, 0.062, 0.057]  # Plate's top-left corner in robot coordinates
 
 def convert_to_robot_coordinates(root_tips, x_offset, y_offset, image_width_pixels, plate_position_robot, plate_size_m):
@@ -126,12 +126,20 @@ robot_coordinates = convert_to_robot_coordinates(
     root_tips, x_offset, y_offset, skeletonized_mask.shape[1], plate_position_robot, plate_size_m
 )
 # _____________________________________________________________________________________________________________________________ #
+x = np.random.uniform(-0.1872, 0.2531)
+y = np.random.uniform(-0.1711, 0.2201)
+z = 0.057
+
+# _____________________________________________________________________________________________________________________________ #
+
+# _____________________________________________________________________________________________________________________________ #
+
 # Load the trained RL model
 rl_model = PPO.load("models\\Final_model_it2")
 
 for goal_pos in robot_coordinates:
     # Set the goal position for the robot
-    env.goal_position = goal_pos
+    env.goal_position = [x, y, z]
     # Run the control algorithm until the robot reaches the goal position
     while True:
         action, _states = rl_model.predict(obs, deterministic=False)
@@ -147,7 +155,8 @@ for goal_pos in robot_coordinates:
             break
 
         if terminated:
-            obs, info = env.reset()
+            obs, info = env.reset(goal_position=goal_pos)
+
 # _____________________________________________________________________________________________________________________________ #
 # _____________________________________________________________________________________________________________________________ #
 # _____________________________________________________________________________________________________________________________ #

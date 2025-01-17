@@ -24,6 +24,12 @@ class OT2Env(gym.Env):
 
         # Initialize step count
         self.steps = 0
+    
+    def some_method(self):
+        x = np.random.uniform(-0.1872, 0.2531)
+        y = np.random.uniform(-0.1711, 0.2201)
+        z = 0.057
+        self.goal_position = [x, y, z]
 
     def reset(self, goal_position=None, seed=None):
         if seed is not None:
