@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
 
     # Run simulation
-    num_episodes = 3
+    num_episodes = 20
     results = []
 
     for episode in range(num_episodes):

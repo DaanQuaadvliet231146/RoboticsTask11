@@ -1,117 +1,114 @@
 import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
-from sim_class import Simulation  # Assuming sim_class provides the Simulation environment
-
-GOAL_LOW = np.array([-0.1872, -0.1711, 0.1691], dtype=np.float32)
-GOAL_HIGH = np.array([ 0.2531,  0.2201, 0.2896], dtype=np.float32)
-
+from sim_class import Simulation  # Where your bullet/pipeline simulation is
 
 class OT2Env(gym.Env):
+    """
+    A custom Gym environment that steps the OT-2 robot in (x, y, z) velocities
+    and observes [pipette_position, goal_position].
+    """
+
     def __init__(self, render=False, max_steps=1000):
         super(OT2Env, self).__init__()
-        self.render = render
+        self.render_mode = render
         self.max_steps = max_steps
 
-        # Create the simulation environment
-        self.sim = Simulation(num_agents=1, render=self.render)
+        # Create the underlying simulation environment
+        # (Assumes sim_class.Simulation has a constructor that takes num_agents=1, render=bool)
+        self.sim = Simulation(num_agents=1, render=self.render_mode)
 
-        # Define action space (x, y, z movements with bounded velocities)
-        self.action_space = spaces.Box(low=np.array([-1, -1, -1]), high=np.array([1, 1, 1]), dtype=np.float32)
+        # Action space: [v_x, v_y, v_z], velocities between -1 and +1 m/s (adjust as you like)
+        self.action_space = spaces.Box(
+            low=np.array([-1, -1, -1]), 
+            high=np.array([ 1,  1,  1]), 
+            dtype=np.float32
+        )
 
-        # Define observation space (pipette position + goal position)
-        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(6,), dtype=np.float32)
+        # Observation space: 6D = [pipette_x, pipette_y, pipette_z, goal_x, goal_y, goal_z]
+        # You could also limit it if you know the bounds, but we'll just use +/- inf for simplicity
+        self.observation_space = spaces.Box(
+            low=-np.inf, high=np.inf, shape=(6,), dtype=np.float32
+        )
 
-        # Initialize step count
-        self.steps = 0
-    
-    def some_method(self):
-        x = np.random.uniform(-0.1872, 0.2531)
-        y = np.random.uniform(-0.1711, 0.2201)
-        z = 0.057
-        self.goal_position = [x, y, z]
+        # Store the current step count
+        self.num_steps = 0
 
-    def reset(self, goal_position=None, seed=None):
-        if seed is not None:
-            np.random.seed(seed)
-
-        # Reset simulation environment
-        initial_obs = self.sim.reset(num_agents=1)
-
-            
-        # Decide how to set self.goal_position
-        if goal_position is not None:
-            # Clip user-provided goal_position to bounding box
-            clipped_goal = np.clip(goal_position, GOAL_LOW, GOAL_HIGH)
-            self.goal_position = clipped_goal.astype(np.float32)
-        else:
-            # Randomly set a new goal position
-            self.goal_position = np.array([
-                np.random.uniform(0.2531, -0.1872),
-                np.random.uniform(0.2201, -0.1711),
-                np.random.uniform(0.2896, 0.1691)         
-                ])
-
-        # Call reset function
-        observation = self.sim.reset(num_agents=1)
-        # Set the observation.
-        observation = np.concatenate(
-            (
-                self.sim.get_pipette_position(self.sim.robotIds[0]), 
-                self.goal_position
-            ), axis=0
-        ).astype(np.float32) 
-
-        # Reset step counter
-        self.steps = 0
-
-        # Return observation and info
-        return observation, {}
-
-
-
-    def step(self, action):
-        # set the actions
-        action = np.append(np.array(action, dtype=np.float32), 0)
-        # Call the step function
-        observation = self.sim.run([action])
-        pipette_position = self.sim.get_pipette_position(self.sim.robotIds[0])
-        pipette_position = np.array(pipette_position, dtype=np.float32)
-
-        # Process observation
-        observation = np.array(pipette_position, dtype=np.float32)
-        # Calculate the agent's reward
-        distance = np.linalg.norm(pipette_position - self.goal_position)
-        reward = -distance
-        
-        # Check if the agent reaches within the threshold of the goal position
-        if np.linalg.norm(pipette_position - self.goal_position) <= 0.001:
-            terminated = True
-        else:
-            terminated = False
-
-        # Check if episode should be truncated
-        if self.steps >= self.max_steps:
-            truncated = True
-        else:
-            truncated = False
-        observation = np.concatenate((pipette_position, self.goal_position), axis=0).astype(np.float32)
-        info = {}
-
-        # Update the amount of steps
-        self.steps += 1
-
-        return observation, reward, terminated, truncated, info
-
-    def render(self, mode='human'):
-        pass
-
-    def close(self):
-        self.sim.close()
+        # Will store the [x, y, z] of the goal
+        self.goal_position = np.array([0.0, 0.0, 0.0], dtype=np.float32)
 
     def get_plate_image(self):
     # Return the plate image path from the simulation
         return self.sim.plate_image_path
+    
+    
+    def reset(self, seed=None, options=None):
+        """
+        Reset the simulation, pick a default or random goal (if desired), 
+        and return the initial observation.
+        """
+        super().reset(seed=seed)
 
+        # Reset the bullet simulation
+        self.sim.reset(num_agents=1)
+        self.num_steps = 0
 
+        # For PID usage, we might externally set self.goal_position
+        # or randomize it if we prefer. For now let's keep it at [0,0,0].
+        # (You can override this logic in your main code.)
 
+        # Build the new observation
+        pipette_pos = self.sim.get_pipette_position(self.sim.robotIds[0])  # shape (3,)
+        obs = np.concatenate([pipette_pos, self.goal_position], axis=0).astype(np.float32)
+        return obs, {}
+
+    def step(self, action):
+        """
+        Step the simulation with the given velocity in x/y/z.
+        We also compute a simple 'reward' as negative distance to goal 
+        (though for PID, you may not actually use reward).
+        """
+        self.num_steps += 1
+
+        # Make sure action is shape (3,) => [v_x, v_y, v_z]
+        if len(action) == 3:
+            # The environment might expect a 4th index if there's a gripper or 
+            # 'drop inoculum' dimension. For PID movement only, we can pass 0 as the 4th:
+            action = np.append(action, 0.0)  # No "gripper" action
+
+        # Actually run the simulation
+        new_obs = self.sim.run([action])
+
+        # Get the new pipette position as a NumPy array
+        pipette_pos = np.array(self.sim.get_pipette_position(self.sim.robotIds[0]), dtype=np.float32)
+
+        # Convert the goal position to a NumPy array if it isn't already
+        goal_position = np.array(self.goal_position, dtype=np.float32)
+
+        # Compute the Euclidean distance between the pipette position and the goal
+        dist = np.linalg.norm(pipette_pos - goal_position)
+        reward = -dist  # A simple negative distance reward
+
+        # Check termination conditions
+        terminated = False
+        # If we are within 1 mm => done
+        if dist <= 0.001:
+            terminated = True
+
+        truncated = False
+        # If we exceed the max steps => truncated
+        if self.num_steps >= self.max_steps:
+            truncated = True
+
+        # Build the new observation = [pipette_x, pipette_y, pipette_z, goal_x, goal_y, goal_z]
+        obs = np.concatenate([pipette_pos, self.goal_position]).astype(np.float32)
+        info = {}
+
+        return obs, reward, terminated, truncated, info
+
+    def render(self):
+        # Not strictly needed for the bullet-based OT2 simulator.
+        pass
+
+    def close(self):
+        self.sim.close()

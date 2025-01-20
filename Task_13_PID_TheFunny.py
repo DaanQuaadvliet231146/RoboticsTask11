@@ -9,6 +9,8 @@ from scipy.ndimage import binary_fill_holes
 from patchify import unpatchify, patchify
 import time
 import matplotlib.pyplot as plt
+from simple_pid import PID
+
 
 
 
@@ -155,6 +157,41 @@ def convert_pixel_to_robot_coordinates(root_tips_px, conversion_factors, plate_p
 
     return robot_coordinates
 
+class PIDControllerPipeline:
+    def __init__(self, env=None):
+        # Reuse the existing environment or create a new one without rendering
+        self.env = env if env else OT2Env(render=False)
+        self.dt = 0.9  # PID time step
+        self.pid_x = PID(5.0, 0.01, 0.05, sample_time=self.dt)
+        self.pid_y = PID(5.0, 0.01, 0.05, sample_time=self.dt)
+        self.pid_z = PID(5.0, 0.01, 0.05, sample_time=self.dt)
+
+        for pid in [self.pid_x, self.pid_y, self.pid_z]:
+            pid.output_limits = (-4.0, 4.0)
+
+    def move_to_position(self, target_position):
+        observation, _ = self.env.reset()
+        pipette_position = observation[:3]
+
+        self.pid_x.setpoint = target_position[0]
+        self.pid_y.setpoint = target_position[1]
+        self.pid_z.setpoint = target_position[2]
+
+        for _ in range(1000):  # Max steps
+            vel_x = self.pid_x(pipette_position[0])
+            vel_y = self.pid_y(pipette_position[1])
+            vel_z = self.pid_z(pipette_position[2])
+
+            action = [vel_x, vel_y, vel_z]
+            observation, _, _, _, _ = self.env.step(action)
+            pipette_position = observation[:3]
+
+            if np.linalg.norm(pipette_position - target_position) < 0.001:
+                print(f"Reached target: {target_position}")
+                return True
+
+        print(f"Failed to reach target: {target_position}")
+        return False
 
 
 # Main Code
@@ -178,7 +215,6 @@ if __name__ == "__main__":
     predicted_mask = predict_mask(cropped_plate_image, unet_model, patch_size=256)
     skeletonized_mask = preprocess_and_skeletonize(predicted_mask)
     root_tips_px = detect_root_tips(skeletonized_mask)
-    plt.show(root_tips_px)
 
         # Convert pixel to robot coordinates
     conversion_factors = calculate_conversion_factors(plate_width_px, plate_height_px)
@@ -188,37 +224,7 @@ if __name__ == "__main__":
 
     print(f"Robot Coordinates: {robot_coordinates}")
 
-    # Load RL model
-    rl_model = PPO.load("models\\Final_model_it2")
-    robot_coordinates[0][1]+=0.02
-
-    # Robot control loop
-    for idx, goal_pos in enumerate(robot_coordinates, start=1):
-        print(f"Moving to goal {idx}: {goal_pos}")
-        env.goal_position = goal_pos
-
-        while True:
-            action, _ = rl_model.predict(obs, deterministic=False)
-            obs, rewards, terminated, truncated, info = env.step(action)
-
-            pipette_pos = np.array(obs[:3])
-            error = np.linalg.norm(pipette_pos - np.array(goal_pos))
-
-            if error < 0.001:
-                action = np.array([0, 0, 0, 1])
-                obs, rewards, terminated, truncated, info = env.step(action)
-
-                for i in range(50):
-                    print(error)
-                    action = np.array([0,0,0,0])
-                    obs, rewards, terminated, truncated, info = env.step(action)
-                print(f"Dropped inoculum at: {pipette_pos}")
-                time.sleep(0.5)
-                break
-
-            if terminated or truncated:
-                print("Simulation ended unexpectedly.")
-                break
-    print(robot_coordinates)
-
-    
+    pid_controller = PIDControllerPipeline()
+    for idx, goal in enumerate(robot_coordinates, start=1):
+        print(f"Moving to root tip {idx}: {goal}")
+        pid_controller.move_to_position(goal)
